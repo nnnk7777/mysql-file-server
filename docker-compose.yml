@@ -1,0 +1,47 @@
+version: "3"
+services:
+  mysql:
+    container_name: comic-mysql
+    image: mysql:8.0
+    env_file: ./.env
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/my.conf:/etc/mysql/conf.d/my.conf
+    ports:
+      - "7202:3306"
+    networks:
+      - comic
+
+  api:
+    container_name: comic-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file: ./.env
+    volumes:
+      - ./api/:/app
+      - ./data:/app/data
+    ports:
+      - 7201:8080
+    tty: true
+    depends_on:
+      - mysql
+    networks:
+      - comic
+
+  phpmyadmin:
+    container_name: comic-phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 7203:80
+    env_file: ./.env
+    depends_on:
+      - mysql
+    networks:
+      - comic
+
+networks:
+  comic:
+    driver: bridge
